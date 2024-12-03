@@ -1,0 +1,5 @@
+name: quarkus-app-metadata-extension
+title: App Metadata Extension
+version: dev
+nav:
+  - modules/ROOT/nav.adoc
