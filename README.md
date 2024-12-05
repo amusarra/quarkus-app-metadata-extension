@@ -1,6 +1,38 @@
-# Quarkus App Metadata Extension
+# Quarkus Application Metadata Extension
 
 [![Version](https://img.shields.io/maven-central/v/io.quarkiverse/quarkus-app-metadata-extension?logo=apache-maven&style=flat-square)](https://central.sonatype.com/artifact/io.quarkiverse/quarkus-app-metadata-extension-parent)
+
+## Overview
+
+The Quarkus Application Metadata Extension provides a way to manage and expose metadata about your Quarkus application. This includes information about the application itself, its dependencies, platform details, Java build information, and source control management (SCM) details.
+
+## Features
+
+- **AppMetadataHandler**: Handles HTTP requests and returns application metadata as a JSON response.
+- **AppMetadataWrapper**: A CDI bean that wraps the `AppMetadata` object.
+- **AppMetadata**: A record class that holds various metadata about the application, including platform info, dependencies, Java build info, and SCM info.
+
+## Usage
+
+### AppMetadataHandler
+
+The `AppMetadataHandler` class processes `AppMetadata` and returns it as a JSON response. It is typically used in a Quarkus application to expose metadata via an HTTP endpoint.
+
+### AppMetadataWrapper
+
+The `AppMetadataWrapper` class is a CDI bean with application scope that wraps the `AppMetadata` object. It provides getter and setter methods to access and modify the metadata.
+
+### AppMetadata
+
+The `AppMetadata` record class includes the following information:
+- **name**: The name of the application.
+- **groupId**: The group ID of the application artifact.
+- **artifactId**: The artifact ID of the application artifact.
+- **version**: The version of the application.
+- **platformInfo**: A list of platform information.
+- **dependencies**: A list of dependencies.
+- **javaBuildInfo**: Information about the Java build environment.
+- **scmInfo**: Information about the source control management.
 
 ## Welcome to Quarkiverse!
 
