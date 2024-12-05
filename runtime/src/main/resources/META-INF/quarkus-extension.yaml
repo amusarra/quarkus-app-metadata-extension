@@ -1,9 +1,15 @@
-name: App Metadata Extension
-#description: Discovery the Application Metadata
+name: Application Metadata Extension
+description: Discovery the Application Metadata
 metadata:
-#  keywords:
-#    - app-metadata-extension
-#  guide: https://docs.quarkiverse.io/app-metadata-extension/dev/ # To create and publish this guide, see https://github.com/quarkiverse/quarkiverse/wiki#documenting-your-extension
-#  categories:
-#    - "miscellaneous"
-#  status: "preview"
+  short-name: app-metadata-extension
+  keywords:
+    - "app metadata"
+    - "metadata"
+  guide: https://docs.quarkiverse.io/app-metadata-extension/dev/ # To create and publish this guide, see https://github.com/quarkiverse/quarkiverse/wiki#documenting-your-extension
+  categories:
+    - "miscellaneous"
+    - "information"
+  config:
+    - "quarkus.application.metadata"
+  status: "preview"
+  sponsor: "Antonio Musarra's Blog (https://www.dontesta.it)"
