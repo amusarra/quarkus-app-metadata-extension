@@ -32,8 +32,8 @@ import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 
 /**
- * Processor class for the App Metadata Extension.
- * This class contains build steps to configure and create routes for the metadata endpoint.
+ * Processor class for the App Metadata Extension. This class contains build steps to configure and
+ * create routes for the metadata endpoint.
  *
  * @author Antonio Musarra
  */
@@ -56,7 +56,7 @@ class AppMetadataExtensionProcessor {
      *
      * @param recorder the recorder to create runtime values.
      * @param info the application info.
-     * @param appModel the application model provider.
+     * @param appModelProvider the application model provider.
      * @param config the configuration for the extension.
      * @param syntheticBeans the build producer for synthetic beans.
      * @return a RouteBuildItem representing the route.
@@ -66,42 +66,53 @@ class AppMetadataExtensionProcessor {
     RouteBuildItem createRoute(
             AppMetadataExtensionRecorder recorder,
             ApplicationInfoBuildItem info,
-            AppModelProviderBuildItem appModel,
-            AppMetadataExtensionConfig config, BuildProducer<SyntheticBeanBuildItem> syntheticBeans) {
+            AppModelProviderBuildItem appModelProvider,
+            AppMetadataExtensionConfig config,
+            BuildProducer<SyntheticBeanBuildItem> syntheticBeans) {
 
-        ApplicationModel applicationModel = appModel.validateAndGet(new BootstrapConfig());
+        ApplicationModel appModel = appModelProvider.validateAndGet(new BootstrapConfig());
 
         AppMetadata metadata = new AppMetadata(
                 info.getName(),
-                applicationModel.getAppArtifact().getGroupId(),
-                applicationModel.getAppArtifact().getArtifactId(),
+                appModel.getAppArtifact().getGroupId(),
+                appModel.getAppArtifact().getArtifactId(),
                 info.getVersion(),
-                config.platformInfo() ? applicationModel.getPlatforms().getPlatformReleaseInfo().stream()
-                        .map(platformReleaseInfo -> new AppMetadata.PlatformInfo(platformReleaseInfo.getPlatformKey(),
-                                platformReleaseInfo.getVersion()))
-                        .toList() : null,
-                config.dependencies() ? applicationModel.getRuntimeDependencies().stream()
-                        .map(dep -> new AppMetadata.Dependency(dep.getArtifactId(), dep.getGroupId()))
-                        .toList() : null,
-                config.javaBuildInfo() ? List.of(new AppMetadata.JavaBuildInfo(
-                        System.getProperty("java.vendor"),
-                        System.getProperty("java.vendor.version"),
-                        System.getProperty("java.version"),
-                        System.getProperty("os.arch"),
-                        System.getProperty("os.name"),
-                        System.getProperty("os.version"),
-                        System.currentTimeMillis())) : null,
+                config.platformInfo()
+                        ? appModel.getPlatforms().getPlatformReleaseInfo().stream()
+                                .map(
+                                        platformReleaseInfo -> new AppMetadata.PlatformInfo(
+                                                platformReleaseInfo.getPlatformKey(),
+                                                platformReleaseInfo.getVersion()))
+                                .toList()
+                        : null,
+                config.dependencies()
+                        ? appModel.getRuntimeDependencies().stream()
+                                .map(dep -> new AppMetadata.Dependency(dep.getArtifactId(), dep.getGroupId()))
+                                .toList()
+                        : null,
+                config.javaBuildInfo()
+                        ? List.of(
+                                new AppMetadata.JavaBuildInfo(
+                                        System.getProperty("java.vendor"),
+                                        System.getProperty("java.vendor.version"),
+                                        System.getProperty("java.version"),
+                                        System.getProperty("os.arch"),
+                                        System.getProperty("os.name"),
+                                        System.getProperty("os.version"),
+                                        System.currentTimeMillis()))
+                        : null,
                 config.scmInfo() ? getScmInfo() : null);
 
         // Use the recorder to create a runtime proxy of AppMetadataWrapper
         RuntimeValue<AppMetadataWrapper> runtimeMetadataWrapper = recorder.createAppMetadataWrapper(metadata);
 
         // Register the runtime proxy as a synthetic bean
-        syntheticBeans.produce(SyntheticBeanBuildItem.configure(AppMetadataWrapper.class)
-                .scope(ApplicationScoped.class)
-                .runtimeValue(runtimeMetadataWrapper)
-                .unremovable()
-                .done());
+        syntheticBeans.produce(
+                SyntheticBeanBuildItem.configure(AppMetadataWrapper.class)
+                        .scope(ApplicationScoped.class)
+                        .runtimeValue(runtimeMetadataWrapper)
+                        .unremovable()
+                        .done());
 
         Handler<RoutingContext> handler = recorder.createHandler(metadata);
 
@@ -128,7 +139,8 @@ class AppMetadataExtensionProcessor {
                 String authorEmail = latestCommit.getAuthorIdent().getEmailAddress();
                 String remoteUrl = repository.getConfig().getString("remote", "origin", "url");
 
-                return new AppMetadata.ScmInfo(branch, currentTag, commitId, commitDate, authorName, authorEmail, remoteUrl);
+                return new AppMetadata.ScmInfo(
+                        branch, currentTag, commitId, commitDate, authorName, authorEmail, remoteUrl);
             }
         } catch (IOException | GitAPIException e) {
             Log.infof("Error accessing Git repository: %s", e.getMessage());
