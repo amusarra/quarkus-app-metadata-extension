@@ -123,7 +123,7 @@ class AppMetadataExtensionProcessor {
                 String currentTag = git.describe().setTags(true).call();
                 RevCommit latestCommit = git.log().setMaxCount(1).call().iterator().next();
                 String commitId = latestCommit.getName();
-                String commitDate = latestCommit.getAuthorIdent().getWhen().toString();
+                String commitDate = latestCommit.getAuthorIdent().getWhenAsInstant().toString();
                 String authorName = latestCommit.getAuthorIdent().getName();
                 String authorEmail = latestCommit.getAuthorIdent().getEmailAddress();
                 String remoteUrl = repository.getConfig().getString("remote", "origin", "url");
