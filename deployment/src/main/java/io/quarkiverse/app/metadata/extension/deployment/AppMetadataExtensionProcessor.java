@@ -2,6 +2,9 @@ package io.quarkiverse.app.metadata.extension.deployment;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+
+import jakarta.enterprise.context.ApplicationScoped;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -9,13 +12,13 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
+import io.quarkiverse.app.metadata.extension.runtime.AppMetadata;
 import io.quarkiverse.app.metadata.extension.runtime.AppMetadataExtensionRecorder;
+import io.quarkiverse.app.metadata.extension.runtime.AppMetadataWrapper;
+import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
 import io.quarkus.bootstrap.model.ApplicationModel;
 import io.quarkus.deployment.BootstrapConfig;
+import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
@@ -23,6 +26,7 @@ import io.quarkus.deployment.builditem.AppModelProviderBuildItem;
 import io.quarkus.deployment.builditem.ApplicationInfoBuildItem;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.logging.Log;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.vertx.http.deployment.RouteBuildItem;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
@@ -42,98 +46,67 @@ class AppMetadataExtensionProcessor {
             AppMetadataExtensionRecorder recorder,
             ApplicationInfoBuildItem info,
             AppModelProviderBuildItem appModel,
-            AppMetadataExtensionConfig config) {
+            AppMetadataExtensionConfig config, BuildProducer<SyntheticBeanBuildItem> syntheticBeans) {
 
         ApplicationModel applicationModel = appModel.validateAndGet(new BootstrapConfig());
 
-        ObjectNode json = JsonNodeFactory.instance.objectNode();
-        json.put("name", info.getName());
-        json.put("groupId", applicationModel.getAppArtifact().getGroupId());
-        json.put("artifactId", applicationModel.getAppArtifact().getArtifactId());
-        json.put("version", info.getVersion());
+        AppMetadata metadata = new AppMetadata(
+                info.getName(),
+                applicationModel.getAppArtifact().getGroupId(),
+                applicationModel.getAppArtifact().getArtifactId(),
+                info.getVersion(),
+                config.platformInfo() ? applicationModel.getPlatforms().getPlatformReleaseInfo().stream()
+                        .map(platformReleaseInfo -> new AppMetadata.PlatformInfo(platformReleaseInfo.getPlatformKey(),
+                                platformReleaseInfo.getVersion()))
+                        .toList() : null,
+                config.dependencies() ? applicationModel.getRuntimeDependencies().stream()
+                        .map(dep -> new AppMetadata.Dependency(dep.getArtifactId(), dep.getGroupId()))
+                        .toList() : null,
+                config.javaBuildInfo() ? List.of(new AppMetadata.JavaBuildInfo(
+                        System.getProperty("java.vendor"),
+                        System.getProperty("java.vendor.version"),
+                        System.getProperty("java.version"),
+                        System.getProperty("os.arch"),
+                        System.getProperty("os.name"),
+                        System.getProperty("os.version"),
+                        System.currentTimeMillis())) : null,
+                config.scmInfo() ? getScmInfo() : null);
 
-        if (config.platformInfo()) {
-            ArrayNode platformInfoArray = json.putArray("platform-info");
-            applicationModel
-                    .getPlatforms()
-                    .getPlatformReleaseInfo()
-                    .forEach(
-                            platformReleaseInfo -> platformInfoArray
-                                    .addObject()
-                                    .put("platform", platformReleaseInfo.getPlatformKey())
-                                    .put("version", platformReleaseInfo.getVersion()));
-        }
+        // Utilizza il recorder per creare un proxy runtime di AppMetadataWrapper
+        RuntimeValue<AppMetadataWrapper> runtimeMetadataWrapper = recorder.createAppMetadataWrapper(metadata);
 
-        if (config.dependencies()) {
-            ArrayNode dependenciesArray = json.putArray("runtime-dependencies");
-            applicationModel
-                    .getRuntimeDependencies()
-                    .forEach(
-                            dep -> dependenciesArray
-                                    .addObject()
-                                    .put("artifactId", dep.getArtifactId())
-                                    .put("groupId", dep.getGroupId()));
-        }
+        // Registra il bean come singleton
+        syntheticBeans.produce(SyntheticBeanBuildItem.configure(AppMetadataWrapper.class)
+                .scope(ApplicationScoped.class)
+                .runtimeValue(runtimeMetadataWrapper)
+                .unremovable()
+                .done());
 
-        if (config.javaBuildInfo()) {
-            ArrayNode javaBuildInfo = json.putArray("javaBuildInfo");
-            javaBuildInfo
-                    .addObject()
-                    .put("javaVendor", System.getProperty("java.vendor"))
-                    .put("javaVendorVersion", System.getProperty("java.vendor.version"))
-                    .put("javaVersion", System.getProperty("java.version"))
-                    .put("osArch", System.getProperty("os.arch"))
-                    .put("osName", System.getProperty("os.name"))
-                    .put("osVersion", System.getProperty("os.version"))
-                    .put("buildTime", System.currentTimeMillis());
-        }
-
-        if (config.scmInfo()) {
-            try {
-                FileRepositoryBuilder builder = new FileRepositoryBuilder();
-                Repository repository = builder.setGitDir(new File(".git")).readEnvironment().findGitDir().build();
-
-                try (Git git = new Git(repository)) {
-                    // Get the current branch
-                    String branch = repository.getBranch();
-                    Log.infof("Current branch: %s", branch);
-
-                    // Get the current tag
-                    String currentTag = git.describe().setTags(true).call();
-                    Log.infof("Current tag: %s", currentTag);
-
-                    // Get the latest commit
-                    RevCommit latestCommit = git.log().setMaxCount(1).call().iterator().next();
-                    String commitId = latestCommit.getName();
-                    String commitDate = latestCommit.getAuthorIdent().getWhen().toString();
-                    String authorName = latestCommit.getAuthorIdent().getName();
-                    String authorEmail = latestCommit.getAuthorIdent().getEmailAddress();
-                    Log.infof("Latest commit: %s", commitId);
-                    Log.infof("Latest commit date: %s", commitDate);
-                    Log.infof("Author: %s <%s>", authorName, authorEmail);
-
-                    // Get the remote URL
-                    String remoteUrl = repository.getConfig().getString("remote", "origin", "url");
-                    Log.infof("Remote URL origin: %s", remoteUrl);
-
-                    ArrayNode scmInfo = json.putArray("scmInfo");
-                    scmInfo
-                            .addObject()
-                            .put("branch", branch)
-                            .put("tag", currentTag)
-                            .put("commitId", commitId)
-                            .put("commitDate", commitDate)
-                            .put("authorName", authorName)
-                            .put("authorEmail", authorEmail)
-                            .put("remoteUrl", remoteUrl);
-                }
-            } catch (IOException | GitAPIException e) {
-                Log.infof("Error accessing Git repository: %s", e.getMessage());
-            }
-        }
-
-        Handler<RoutingContext> handler = recorder.createHandler(json.toString());
+        Handler<RoutingContext> handler = recorder.createHandler(metadata);
 
         return new RouteBuildItem.Builder().handler(handler).route(config.path()).build();
+    }
+
+    private AppMetadata.ScmInfo getScmInfo() {
+        try {
+            FileRepositoryBuilder builder = new FileRepositoryBuilder();
+            Repository repository = builder.setGitDir(new File(".git")).readEnvironment().findGitDir().build();
+
+            try (Git git = new Git(repository)) {
+                String branch = repository.getBranch();
+                String currentTag = git.describe().setTags(true).call();
+                RevCommit latestCommit = git.log().setMaxCount(1).call().iterator().next();
+                String commitId = latestCommit.getName();
+                String commitDate = latestCommit.getAuthorIdent().getWhen().toString();
+                String authorName = latestCommit.getAuthorIdent().getName();
+                String authorEmail = latestCommit.getAuthorIdent().getEmailAddress();
+                String remoteUrl = repository.getConfig().getString("remote", "origin", "url");
+
+                return new AppMetadata.ScmInfo(branch, currentTag, commitId, commitDate, authorName, authorEmail, remoteUrl);
+            }
+        } catch (IOException | GitAPIException e) {
+            Log.infof("Error accessing Git repository: %s", e.getMessage());
+            return null;
+        }
     }
 }
