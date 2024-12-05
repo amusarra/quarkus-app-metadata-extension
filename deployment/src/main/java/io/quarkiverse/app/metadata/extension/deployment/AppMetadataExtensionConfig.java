@@ -6,7 +6,7 @@ import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
 @ConfigRoot(phase = ConfigPhase.BUILD_TIME)
-@ConfigMapping(prefix = "quarkus.app.metadata")
+@ConfigMapping(prefix = "quarkus.application.metadata")
 public interface AppMetadataExtensionConfig {
 
     /** The path to the metadata endpoint. */

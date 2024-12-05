@@ -1,8 +1,8 @@
 package io.quarkiverse.app.metadata.extension.runtime;
 
-import jakarta.inject.Singleton;
+import jakarta.enterprise.context.ApplicationScoped;
 
-@Singleton
+@ApplicationScoped
 public class AppMetadataWrapper {
     private AppMetadata appMetadata;
 
