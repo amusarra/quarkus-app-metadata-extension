@@ -31,15 +31,36 @@ import io.quarkus.vertx.http.deployment.RouteBuildItem;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 
+/**
+ * Processor class for the App Metadata Extension.
+ * This class contains build steps to configure and create routes for the metadata endpoint.
+ *
+ * @author Antonio Musarra
+ */
 class AppMetadataExtensionProcessor {
 
     private static final String FEATURE = "app-metadata-extension";
 
+    /**
+     * Build step to register the feature.
+     *
+     * @return a FeatureBuildItem representing the feature.
+     */
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
     }
 
+    /**
+     * Build step to create a route for the metadata endpoint.
+     *
+     * @param recorder the recorder to create runtime values.
+     * @param info the application info.
+     * @param appModel the application model provider.
+     * @param config the configuration for the extension.
+     * @param syntheticBeans the build producer for synthetic beans.
+     * @return a RouteBuildItem representing the route.
+     */
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
     RouteBuildItem createRoute(
@@ -72,10 +93,10 @@ class AppMetadataExtensionProcessor {
                         System.currentTimeMillis())) : null,
                 config.scmInfo() ? getScmInfo() : null);
 
-        // Utilizza il recorder per creare un proxy runtime di AppMetadataWrapper
+        // Use the recorder to create a runtime proxy of AppMetadataWrapper
         RuntimeValue<AppMetadataWrapper> runtimeMetadataWrapper = recorder.createAppMetadataWrapper(metadata);
 
-        // Registra il bean come singleton
+        // Register the runtime proxy as a synthetic bean
         syntheticBeans.produce(SyntheticBeanBuildItem.configure(AppMetadataWrapper.class)
                 .scope(ApplicationScoped.class)
                 .runtimeValue(runtimeMetadataWrapper)
@@ -87,6 +108,11 @@ class AppMetadataExtensionProcessor {
         return new RouteBuildItem.Builder().handler(handler).route(config.path()).build();
     }
 
+    /**
+     * Retrieves SCM (git) information.
+     *
+     * @return an AppMetadata.ScmInfo object containing SCM information.
+     */
     private AppMetadata.ScmInfo getScmInfo() {
         try {
             FileRepositoryBuilder builder = new FileRepositoryBuilder();

@@ -5,6 +5,12 @@ import io.quarkus.runtime.annotations.ConfigRoot;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
+/**
+ * Configuration interface for the App Metadata Extension.
+ * This configuration is used at build time.
+ *
+ * @author Antonio Musarra
+ */
 @ConfigRoot(phase = ConfigPhase.BUILD_TIME)
 @ConfigMapping(prefix = "quarkus.application.metadata")
 public interface AppMetadataExtensionConfig {
