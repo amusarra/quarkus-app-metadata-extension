@@ -1,0 +1,96 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-app-metadata-extension_quarkus-application-metadata-path]] [.property-path]##link:#quarkus-app-metadata-extension_quarkus-application-metadata-path[`quarkus.application.metadata.path`]##
+
+[.description]
+--
+The path to the metadata endpoint.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_APPLICATION_METADATA_PATH+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_APPLICATION_METADATA_PATH+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`/app-metadata`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-app-metadata-extension_quarkus-application-metadata-platform-info]] [.property-path]##link:#quarkus-app-metadata-extension_quarkus-application-metadata-platform-info[`quarkus.application.metadata.platform-info`]##
+
+[.description]
+--
+Whether to include platform information in the metadata.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_APPLICATION_METADATA_PLATFORM_INFO+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_APPLICATION_METADATA_PLATFORM_INFO+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-app-metadata-extension_quarkus-application-metadata-dependencies]] [.property-path]##link:#quarkus-app-metadata-extension_quarkus-application-metadata-dependencies[`quarkus.application.metadata.dependencies`]##
+
+[.description]
+--
+Whether to include dependencies in the metadata.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_APPLICATION_METADATA_DEPENDENCIES+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_APPLICATION_METADATA_DEPENDENCIES+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`false`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-app-metadata-extension_quarkus-application-metadata-java-build-info]] [.property-path]##link:#quarkus-app-metadata-extension_quarkus-application-metadata-java-build-info[`quarkus.application.metadata.java-build-info`]##
+
+[.description]
+--
+Whether to include the Quarkus java build info in the metadata.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_APPLICATION_METADATA_JAVA_BUILD_INFO+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_APPLICATION_METADATA_JAVA_BUILD_INFO+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+a|icon:lock[title=Fixed at build time] [[quarkus-app-metadata-extension_quarkus-application-metadata-scm-info]] [.property-path]##link:#quarkus-app-metadata-extension_quarkus-application-metadata-scm-info[`quarkus.application.metadata.scm-info`]##
+
+[.description]
+--
+Whether to include the SCM (git) info in the metadata.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_APPLICATION_METADATA_SCM_INFO+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_APPLICATION_METADATA_SCM_INFO+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`true`
+
+|===
+
